@@ -1,1 +1,39 @@
+name: TW SOCKS5 Proxy Pool
 
+on:
+  schedule:
+    - cron: "0 */6 * * *"   # 每 6 小时
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install deps
+      run: |
+        pip install -r requirements.txt
+
+    - name: Fetch proxies
+      run: python fetch_proxies.py
+
+    - name: Check proxies
+      run: python check_proxies.py
+
+    - name: Build pool
+      run: python proxy_pool.py
+
+    - name: Commit update
+      run: |
+        git config user.name "proxy-bot"
+        git config user.email "proxy@github.com"
+        git add data/
+        git commit -m "update proxy pool" || true
+        git push
